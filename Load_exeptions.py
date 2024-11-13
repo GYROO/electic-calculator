@@ -5,7 +5,7 @@ message_2 = 'unable to set :'
 
 class wrong_input(Exception):
     pass
-##ddjkfff
+
 
 def is_number(input_obj):
     try:
