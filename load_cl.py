@@ -1,5 +1,7 @@
 import math
 
+
+
 class value_over_one(Exception):
     pass
 class value_lower_zero(Exception):
@@ -25,7 +27,7 @@ class Load:
                   pnominal=1,
                   cosu=0.95,
                   tgu=1,
-                  ki=0.5,
+                  ki=1,
                   ki_x_pnominal=1,
                   ki_x_pnominal_x_tgu=1,
                   count_x_pnominal_by_one_pow=1,
@@ -86,7 +88,153 @@ class Load:
 
         except value_lower_zero:
             print(f"задан tg(u)<0: {Load.tgu}")
+
+    def calc_Pnominal (Load):
+        print(f"Вызов вычисления Pном(общ.)...")
+
+        try:
+
+            if Load.count <= 0:
+
+                raise value_lower_zero
+
+            elif Load.pnominal_by_one <=0:
+
+                raise value_lower_zero
+
+
+            else:
+
+                action = lambda: accuracy(Load.count * Load.pnominal_by_one)
+
+                Load.pnominal = action()
+
+                print(f"Расчитан Pном(общ.) ={Load.pnominal} кВт | при  кол-ве {Load.count} и мощности единицы {Load.pnominal_by_one} кВт")
+
+        except value_lower_zero:
+
+            print(f"{message3} получены некорректные данные: {Load.count} или {Load.pnominal} (кВт)--> расчет некорректен")
+
+
+    def calc_ki_x_Pnominal(Load):
+
+        print(f"Вызов расчета Ki *P(ном)...")
+
+        try:
+
+            if Load.ki >1:
+
+                raise value_over_one
+
+            elif Load.ki < 0:
+
+                raise value_lower_zero
+
+            elif Load.pnominal <0:
+
+                raise value_lower_zero
+
+            else:
+
+                action = lambda: accuracy(Load.ki * Load.pnominal)
+
+                Load.ki_x_pnominal  = action()
+
+                print(f"Вычислен Ki*Pном ={Load.ki_x_pnominal} кВт | при  Ki ={Load.ki} и Pном= {Load.pnominal}")
+
+        except  (value_lower_zero, value_over_one):
+
+            print(f"{message3}  Кi должен быть в рамках 0<Ki <=1 и P(ном) >0, задан Ki={Load.ki}  и P(ном) = {Load.pnominal} кВт ")
+
+
+    def calc_ki_x_Pnominal_tgu(Load):
+         print(f"Вызван расчет Ki * P(ном) * tg(u)...")
+
+         action = lambda: accuracy(Load.ki_x_pnominal * Load.tgu)
+
+         Load.ki_x_pnominal_x_tgu = action()
+
+         print(f"Выполнен расчет Ki * P(ном) * tg(u)= {Load.ki_x_pnominal_x_tgu} кВт | при  Ki * P(ном) ={Load.ki_x_pnominal}кВт и tg(u) ={Load.tgu}")
+
+
+    def calc_count_x_Pnominal_pow(Load):
+
+        print(f"Вызван расчет n * P(ном) ^2...")
+
+        action = lambda : accuracy(Load.count * math.pow( Load.pnominal_by_one, 2 ))
+
+        Load.count_x_pnominal_by_one_pow = action()
+
+        print(f"Вычислен n * P(ном) ^2 = {Load.count_x_pnominal_by_one_pow} кВт")
+
+    def  calc_Pactive(Load):
+        print(f"Вызван расчет активной мощности  {Load.name} P (акт.)... ")
+
+        action = lambda : accuracy (Load.ki*Load.pnominal)
+
+        Load.pactive = action()
+
+        print(f"Вычислена активная мощность для {Load.name} P(акт.) = {Load.pactive} кВт")
+
+    def calc_Qreactive(Load):
+        print(f"Вызван расчет рефктивной мощности {Load.name } Q кВАр")
+
+        action = lambda : accuracy(Load.ki_x_pnominal * Load.tgu)
+
+        Load.qreactive = action()
+
+        print(f'Вычислена реактивная мощность для {Load.name} Q кВар = {Load.qreactive}')
+
+    def calc_Sfull(Load):
+        print(f"Вызов расчета полной мощности для {Load.name} S. кВА...")
+
+        action = lambda: accuracy(math.sqrt(math.pow(Load.pactive,2)+ math.pow(Load.qreactive,2)))
+
+        Load.sfull = action()
+
+        print(f"Вычислена полная мощность для {Load.name} S кВА = {Load.sfull}")
+
+    def calc_I(Load):
+        print(f"Вызван Расчет токовой нагрузки I, А для {Load.name}....")
+
+        action = lambda : accuracy( Load.sfull / (math.sqrt(3) * (Load.voltage* 0.001 )))
+
+        Load.icurrent=action()
+
+        print(f"Рассчитана токовая нагрузка для {Load.name}  I(расч), А = {Load.icurrent}")
+
+
+    def calc_power_method(Load):
+
+       Load.calc_tgu()
+       Load.calc_Pnominal()
+       Load.calc_ki_x_Pnominal()
+       Load.calc_ki_x_Pnominal_tgu()
+       Load.calc_count_x_Pnominal_pow()
+       Load.calc_Pactive()
+       Load.calc_Qreactive()
+       Load.calc_Sfull()
+       Load.calc_I()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
 test = Load()
 test.print_attr()
-test.calc_tgu()
-test.calc_cosu()
+test.calc_power_method()
+test.print_attr()
