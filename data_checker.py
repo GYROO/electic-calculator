@@ -130,6 +130,8 @@ def count_checker(inputs):
     equals_integer(inputs['count'])
     if inputs['count'] <= 0:
         raise count_value_err
+    else:
+        print("[ok]")
 
 
 
