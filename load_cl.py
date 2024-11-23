@@ -205,7 +205,7 @@ class Load:
 
 
     def calc_power_method(Load):
-
+       print(f' ---Запуск процедуры вычилсений от мощности для {Load.name}---')
        Load.calc_tgu()
        Load.calc_Pnominal()
        Load.calc_ki_x_Pnominal()
@@ -215,7 +215,7 @@ class Load:
        Load.calc_Qreactive()
        Load.calc_Sfull()
        Load.calc_I()
-
+       print(f"[ok]: расчет завершен----------------------------------")
 
 
 
