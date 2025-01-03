@@ -20,7 +20,7 @@ class Load:
                   is_conv_1ph=False,
                   is_conv_linear_1ph=False,
                   is_prior=False,
-                  phase=1,
+                  phase=4,
                   voltage=380,
                   count=3,
                   pnominal_by_one=10,
@@ -59,6 +59,37 @@ class Load:
 
     def print_attr(Load):
             print (f"-------------------------{Load.__class__.__name__}--------------------------------\n[01] name: {Load.name};\n[02] is converted from current (bool): {Load.is_conv_from_icurrent};\n[03] is converted from one phase (bool): {Load.is_conv_1ph};\n[04] is converted from linear one phase (bool): {Load.is_conv_linear_1ph};\n[05] is prior (bool): {Load.is_prior};\n[06] current phase (1=L1, 2=L2, 3=L3, 4=L1,L2,L3): {Load.phase};\n[07] voltage of load: {Load.voltage}V;\n[08] count: {Load.count};\n[09] P nominal of one: {Load.pnominal_by_one}kW;\n[10] P nominal of count: {Load.pnominal}kw;\n[11] use coefficient Ki: {Load.ki};\n[12] cos(u): {Load.cosu};\n[13] tan(u): {Load.tgu};\n[14] ki * P nominal of count: {Load.ki_x_pnominal};\n[15] ki * P nominal of count * tan(u): {Load.ki_x_pnominal_x_tgu}; \n[16] count * (P nominal of one)^2 :{Load.count_x_pnominal_by_one_pow},\n[17] P active: {Load.pactive}kW;\n[18] Q reactive: {Load.qreactive}kVAr(s);\n[19] S full: {Load.sfull}kVA; \n[20] I nominal: {Load.icurrent}A;" )
+
+    def type_pharser(Load):
+
+        if Load.is_conv_linear_1ph == True:
+            print(f"приведение линейного однофазного потрибителя {Load.name} к трехфазной мощности: \nувеличение мощности на кор. из трех")
+            Load.name = (Load.name+" (лин. 1ф прив. к 3ф)")
+            action = lambda: accuracy(Load.pnominal_by_one * math.sqrt(3))
+            Load.pnominal_by_one = action()
+        elif Load.phase == 1 and Load.is_conv_1ph == False:
+            print(f"приведение  наиболее загруженной фазы  А(L1) к трефазному потребителю ")
+            action1 = lambda: accuracy(Load.pnominal_by_one * 3)
+            Load.name = (Load.name+ "(1ф к 3ф экв)")
+            Load.pnominal_by_one  = action1()
+        elif Load.phase == 2 and Load.is_conv_1ph == False:
+            print(f"приведение  наиболее загруженной фазы  В(L2) к трефазному потребителю ")
+            action2 = lambda: accuracy(Load.pnominal_by_one * 3)
+            Load.name = (Load.name + "(1ф к 3ф экв)")
+            Load.pnominal_by_one = action2()
+        elif Load.phase == 3 and Load.is_conv_1ph == False:
+            print(f"приведение  наиболее загруженной фазы  C(L3) к трефазному потребителю ")
+            action3 = lambda: accuracy(Load.pnominal_by_one * 3)
+            Load.name = (Load.name + "(1ф к 3ф экв)")
+            Load.pnominal_by_one = action3()
+        else:
+            pass
+
+
+
+
+
+
 
     def calc_tgu(Load):
         print("вызов вычисления tg(u)...")
@@ -196,16 +227,23 @@ class Load:
 
     def calc_I(Load):
         print(f"Вызван Расчет токовой нагрузки I, А для {Load.name}....")
+        if Load.phase == 4:
+            print(f"{Load.name} - на линейном напряжении")
+            action1 = lambda : accuracy( Load.sfull / (math.sqrt(3) * (Load.voltage* 0.001 )))
+            Load.icurrent = action1()
+        else:
+            print(f"{Load.name} - на фазном напряжении, фаза: {Load.phase}")
+            action2 = lambda: accuracy(Load.sfull / (Load.voltage * 0.001))
+            Load.icurrent = action2()
 
-        action = lambda : accuracy( Load.sfull / (math.sqrt(3) * (Load.voltage* 0.001 )))
 
-        Load.icurrent=action()
 
         print(f"Рассчитана токовая нагрузка для {Load.name}  I(расч), А = {Load.icurrent}")
 
 
     def calc_power_method(Load):
        print(f' ---Запуск процедуры вычилсений от мощности для {Load.name}---')
+       Load.type_pharser()
        Load.calc_tgu()
        Load.calc_Pnominal()
        Load.calc_ki_x_Pnominal()
@@ -216,6 +254,75 @@ class Load:
        Load.calc_Sfull()
        Load.calc_I()
        print(f"[ok]: расчет завершен----------------------------------")
+
+    def calc_S_from_current(Load):
+        print(f"вызов метода, расчета от тока")
+        if Load.is_conv_from_icurrent == True:
+            print("[ok] параметр рпасчета от така получен")
+            if Load.phase == 4:
+                action4 = lambda : (Load.voltage * 0.001) * math.sqrt(3)
+                temp4 = action4()
+                Load.sfull = (Load.icurrent * temp4)
+            elif Load.phase == 1:
+                action1 = lambda : (Load.voltage * 0.001)
+                temp1 = action1()
+                Load.sfull = (Load.icurrent* temp1)
+            elif Load.phase == 2:
+                action2 = lambda: (Load.voltage * 0.001)
+                temp2 = action2()
+                Load.sfull = (Load.icurrent * temp2)
+            elif Load.phase == 3:
+                action3 = lambda: (Load.voltage * 0.001)
+                temp3 = action3()
+                Load.sfull = (Load.icurrent * temp3)
+            else:
+                print(f"ошибка значения фазы : {Load.phase} ")
+
+        else:
+            print(f"Вызов не имеет требуемого параметра")
+            pass
+
+    def сalc_pactive_from_current(Load):
+           print(f"Расчет активной мощности отталкиваясь от коэффициентов нагрузки")
+           action = lambda : accuracy(Load.sfull * Load.cosu)
+           Load.pactive = action()
+           print(f"общая активная мощность P акт ={Load.pactive}")
+
+    def calc_qreactive_from_current(Load):
+        print(f"Расчет реактивной мощности отталкиваясь от коэффициентов нагрузки")
+        action = lambda : accuracy(Load.pactive * Load.tgu)
+        Load.qreactive = action()
+        print(f"общая активная мощность P акт ={Load.qreactive}")
+
+    def calc_pnominal_from_current(Load):
+        print(f"Расчет активной номинальной мощности отталкиваясь от коэффициента использования")
+        if Load.ki >0:
+            action = lambda : accuracy(Load.pactive / Load.ki)
+            Load.pnominal = action()
+            print(f"общая активная мощность без учета коэфф исп. P ном ={Load.pnominal}")
+        else:
+            pass
+
+    def  calc_pnominal_by_one_from_current(Load):
+        print(f"Расчет активной единичной мощности отталкиваясь от числа потребителей")
+        if Load.count > 0:
+            action  = lambda : accuracy(Load.pnominal / Load.count)
+            Load.pnominal_by_one = action()
+            print(f"активная мощность eдиницы ={Load.pnominal_by_one}")
+        else:
+            pass
+
+       def calc_current_method(Load):
+           Load.calc_tgu()
+           Load.calc_S_from_current()
+           Load.сalc_pactive_from_current()
+           Load.calc_qreactive_from_current()
+           Load.calc_pnominal_from_current()
+           Load.calc_pnominal_by_one_from_current()
+           Load.count_x_pnominal_by_one_pow()
+
+
+
 
 
 
