@@ -14,6 +14,9 @@ def accuracy(attr):
     return round(attr, 4)
 
 class Load:
+
+    # creates a default obj heap (list) for class Load
+
     main_heap = []
 
     def __init__ (self,
@@ -59,6 +62,7 @@ class Load:
                       self.sfull = sfull;
                       self.icurrent = icurrent
 
+                      #add to Load obj heap (list)
 
                       Load.main_heap.append(self)
 
