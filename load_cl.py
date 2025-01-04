@@ -14,6 +14,8 @@ def accuracy(attr):
     return round(attr, 4)
 
 class Load:
+    main_heap = []
+
     def __init__ (self,
                   name='null',
                   is_conv_from_icurrent=False,
@@ -56,6 +58,9 @@ class Load:
                       self.qreactive = qreacive;
                       self.sfull = sfull;
                       self.icurrent = icurrent
+
+
+                      Load.main_heap.append(self)
 
     def print_attr(Load):
             print (f"-------------------------{Load.__class__.__name__}--------------------------------\n[01] name: {Load.name};\n[02] is converted from current (bool): {Load.is_conv_from_icurrent};\n[03] is converted from one phase (bool): {Load.is_conv_1ph};\n[04] is converted from linear one phase (bool): {Load.is_conv_linear_1ph};\n[05] is prior (bool): {Load.is_prior};\n[06] current phase (1=L1, 2=L2, 3=L3, 4=L1,L2,L3): {Load.phase};\n[07] voltage of load: {Load.voltage}V;\n[08] count: {Load.count};\n[09] P nominal of one: {Load.pnominal_by_one}kW;\n[10] P nominal of count: {Load.pnominal}kw;\n[11] use coefficient Ki: {Load.ki};\n[12] cos(u): {Load.cosu};\n[13] tan(u): {Load.tgu};\n[14] ki * P nominal of count: {Load.ki_x_pnominal};\n[15] ki * P nominal of count * tan(u): {Load.ki_x_pnominal_x_tgu}; \n[16] count * (P nominal of one)^2 :{Load.count_x_pnominal_by_one_pow},\n[17] P active: {Load.pactive}kW;\n[18] Q reactive: {Load.qreactive}kVAr(s);\n[19] S full: {Load.sfull}kVA; \n[20] I nominal: {Load.icurrent}A;" )
@@ -229,7 +234,7 @@ class Load:
         print(f"Вызван Расчет токовой нагрузки I, А для {Load.name}....")
         if Load.phase == 4:
             print(f"{Load.name} - на линейном напряжении")
-            action1 = lambda : accuracy( Load.sfull / (math.sqrt(3) * (Load.voltage* 0.001 )))
+            action1 = lambda: accuracy( Load.sfull / (math.sqrt(3) * (Load.voltage* 0.001 )))
             Load.icurrent = action1()
         else:
             print(f"{Load.name} - на фазном напряжении, фаза: {Load.phase}")
@@ -290,14 +295,14 @@ class Load:
 
     def calc_qreactive_from_current(Load):
         print(f"Расчет реактивной мощности отталкиваясь от коэффициентов нагрузки")
-        action = lambda : accuracy(Load.pactive * Load.tgu)
+        action = lambda: accuracy(Load.pactive * Load.tgu)
         Load.qreactive = action()
         print(f"общая активная мощность P акт ={Load.qreactive}")
 
     def calc_pnominal_from_current(Load):
         print(f"Расчет активной номинальной мощности отталкиваясь от коэффициента использования")
-        if Load.ki >0:
-            action = lambda : accuracy(Load.pactive / Load.ki)
+        if Load.ki > 0:
+            action = lambda: accuracy(Load.pactive / Load.ki)
             Load.pnominal = action()
             print(f"общая активная мощность без учета коэфф исп. P ном ={Load.pnominal}")
         else:
@@ -306,20 +311,23 @@ class Load:
     def  calc_pnominal_by_one_from_current(Load):
         print(f"Расчет активной единичной мощности отталкиваясь от числа потребителей")
         if Load.count > 0:
-            action  = lambda : accuracy(Load.pnominal / Load.count)
+            action  = lambda: accuracy(Load.pnominal / Load.count)
             Load.pnominal_by_one = action()
             print(f"активная мощность eдиницы ={Load.pnominal_by_one}")
         else:
             pass
 
-       def calc_current_method(Load):
+
+
+    def calc_current_method(Load):
            Load.calc_tgu()
            Load.calc_S_from_current()
            Load.сalc_pactive_from_current()
            Load.calc_qreactive_from_current()
            Load.calc_pnominal_from_current()
            Load.calc_pnominal_by_one_from_current()
-           Load.count_x_pnominal_by_one_pow()
+           Load.calc_count_x_Pnominal_pow()
+           Load.is_conv_from_icurrent = True
 
 
 
@@ -345,3 +353,6 @@ test = Load()
 test.print_attr()
 test.calc_power_method()
 test.print_attr()
+test.calc_current_method()
+test.print_attr()
+print(Load.main_heap)
