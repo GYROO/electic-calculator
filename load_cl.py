@@ -19,13 +19,15 @@ class Load:
 
     main_heap = []
 
+
+
     def __init__ (self,
                   name='null',
-                  is_conv_from_icurrent=False,
+                  is_conv_from_icurrent=True,
                   is_conv_1ph=False,
                   is_conv_linear_1ph=False,
                   is_prior=False,
-                  phase=4,
+                  phase=1,
                   voltage=380,
                   count=3,
                   pnominal_by_one=10,
@@ -265,7 +267,7 @@ class Load:
        print(f"[ok]: расчет завершен----------------------------------")
 
     def calc_S_from_current(Load):
-        print(f"вызов метода, расчета от тока")
+        print(f"вызов метода расчета S от тока")
         if Load.is_conv_from_icurrent == True:
             print("[ok] параметр рпасчета от така получен")
             if Load.phase == 4:
@@ -335,7 +337,11 @@ class Load:
 
 
 
+    def Load_sort_ph1(Load):
 
+        L1  = [loads for loads in Load.main_heap if Load.phase == 1 ]
+        L1_summary=
+        return L1
 
 
 
@@ -359,4 +365,7 @@ test.calc_power_method()
 test.print_attr()
 test.calc_current_method()
 test.print_attr()
-print(Load.main_heap)
+L1 = test.Load_sort_ph1()
+print(L1)
+
+
