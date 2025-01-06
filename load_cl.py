@@ -27,7 +27,7 @@ class Load:
                   is_conv_1ph=False,
                   is_conv_linear_1ph=False,
                   is_prior=False,
-                  phase=1,
+                  phase=3,
                   voltage=380,
                   count=3,
                   pnominal_by_one=10,
@@ -337,11 +337,60 @@ class Load:
 
 
 
-    def Load_sort_ph1(Load):
+    def sort_by_phase(Load):
 
-        L1  = [loads for loads in Load.main_heap if Load.phase == 1 ]
-        L1_summary=
-        return L1
+        L1  = [loads for loads in Load.main_heap if Load.phase == 1]
+
+        L2 =  [loads for loads in Load.main_heap if Load.phase == 2]
+
+        L3 =  [loads for loads in Load.main_heap if Load.phase == 3]
+
+        L123 =  [loads for loads in Load.main_heap if Load.phase == 4]
+
+
+        L1max_i = sum(Load.icurrent for Load in L1)
+
+        L2max_i = sum(Load.icurrent for Load in L2)
+
+        L3max_i = sum(Load.icurrent for Load in L3)
+
+        L123max_i =  sum(Load.icurrent for Load in L123)
+
+
+        load_sorted = [L1,  L2, L3, L123]
+
+        load_phase_max = [L1max_i, L2max_i, L3max_i, L123max_i]
+
+        return load_sorted, load_phase_max
+
+def find_phase_peak (iter_obj):
+
+        temp = iter_obj [1]
+        temp1 = [temp [0] , temp [1], temp [2]]
+        maximum = max([val for val in temp1])
+        minimum = min([val for val in temp1])
+        diff = maximum - minimum
+        if diff == 0:
+            percent = 0
+        elif minimum  == 0:
+            if       maximum == temp1 [0]:
+                percent = 'L1'
+            elif    maximum == temp1 [1]:
+                percent = 'L2'
+            elif    maximum == temp1[2]:
+                percent = 'L3'
+        else:
+            percent = (diff / minimum)* 100
+
+        if maximum == 0:
+            return 0, percent
+        elif maximum == temp1 [0]:
+            return 1, percent
+        elif maximum == temp1 [1]:
+            return 2, percent
+        elif maximum == temp1 [2]:
+            return 3, percent
+
 
 
 
@@ -360,12 +409,15 @@ class Load:
 
             
 test = Load()
+test2 = Load()
 test.print_attr()
+test2.calc_power_method()
 test.calc_power_method()
 test.print_attr()
 test.calc_current_method()
 test.print_attr()
-L1 = test.Load_sort_ph1()
-print(L1)
-
+sorted_heap = test.sort_by_phase()
+print(sorted_heap)
+phase_peak = find_phase_peak(sorted_heap)
+print(phase_peak)
 
