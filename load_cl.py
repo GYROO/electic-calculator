@@ -27,21 +27,22 @@ class Load:
                   is_conv_1ph=False,
                   is_conv_linear_1ph=False,
                   is_prior=False,
-                  phase=3,
-                  voltage=380,
-                  count=3,
+                  phase=2,
+                  voltage=220,
+                  count=1,
                   pnominal_by_one=10,
                   pnominal=1,
-                  cosu=0.95,
+                  cosu=0.85,
                   tgu=1,
-                  ki=1,
+                  ki=0.85,
                   ki_x_pnominal=1,
                   ki_x_pnominal_x_tgu=1,
                   count_x_pnominal_by_one_pow=1,
                   pactive=1,
                   qreacive=1,
                   sfull=1,
-                  icurrent =56.97536,):
+                  icurrent =56.97536,
+                  icurrent_peak =1,):
 
                       self.name = name;
                       self.is_conv_from_icurrent = is_conv_from_icurrent;
@@ -63,13 +64,14 @@ class Load:
                       self.qreactive = qreacive;
                       self.sfull = sfull;
                       self.icurrent = icurrent
+                      self.icurrent_peak = icurrent_peak
 
                       #add to Load obj heap (list)
 
                       Load.main_heap.append(self)
 
     def print_attr(Load):
-            print (f"-------------------------{Load.__class__.__name__}--------------------------------\n[01] name: {Load.name};\n[02] is converted from current (bool): {Load.is_conv_from_icurrent};\n[03] is converted from one phase (bool): {Load.is_conv_1ph};\n[04] is converted from linear one phase (bool): {Load.is_conv_linear_1ph};\n[05] is prior (bool): {Load.is_prior};\n[06] current phase (1=L1, 2=L2, 3=L3, 4=L1,L2,L3): {Load.phase};\n[07] voltage of load: {Load.voltage}V;\n[08] count: {Load.count};\n[09] P nominal of one: {Load.pnominal_by_one}kW;\n[10] P nominal of count: {Load.pnominal}kw;\n[11] use coefficient Ki: {Load.ki};\n[12] cos(u): {Load.cosu};\n[13] tan(u): {Load.tgu};\n[14] ki * P nominal of count: {Load.ki_x_pnominal};\n[15] ki * P nominal of count * tan(u): {Load.ki_x_pnominal_x_tgu}; \n[16] count * (P nominal of one)^2 :{Load.count_x_pnominal_by_one_pow},\n[17] P active: {Load.pactive}kW;\n[18] Q reactive: {Load.qreactive}kVAr(s);\n[19] S full: {Load.sfull}kVA; \n[20] I nominal: {Load.icurrent}A;" )
+            print (f"-------------------------{Load.__class__.__name__}--------------------------------\n[01] name: {Load.name};\n[02] is converted from current (bool): {Load.is_conv_from_icurrent};\n[03] is converted from one phase (bool): {Load.is_conv_1ph};\n[04] is converted from linear one phase (bool): {Load.is_conv_linear_1ph};\n[05] is prior (bool): {Load.is_prior};\n[06] current phase (1=L1, 2=L2, 3=L3, 4=L1,L2,L3): {Load.phase};\n[07] voltage of load: {Load.voltage}V;\n[08] count: {Load.count};\n[09] P nominal of one: {Load.pnominal_by_one}kW;\n[10] P nominal of count: {Load.pnominal}kw;\n[11] use coefficient Ki: {Load.ki};\n[12] cos(u): {Load.cosu};\n[13] tan(u): {Load.tgu};\n[14] ki * P nominal of count: {Load.ki_x_pnominal};\n[15] ki * P nominal of count * tan(u): {Load.ki_x_pnominal_x_tgu}; \n[16] count * (P nominal of one)^2 :{Load.count_x_pnominal_by_one_pow},\n[17] P active: {Load.pactive}kW;\n[18] Q reactive: {Load.qreactive}kVAr(s);\n[19] S full: {Load.sfull}kVA; \n[20] I nominal: {Load.icurrent}A;\n[21] I peak: {Load.icurrent_peak}A" )
 
     def type_pharser(Load):
 
@@ -251,10 +253,16 @@ class Load:
 
         print(f"Рассчитана токовая нагрузка для {Load.name}  I(расч), А = {Load.icurrent}")
 
+    def calc_Ipeak(Load):
+        if Load.ki  <= 0:
+            pass
+        else:
+            action = lambda : Load.icurrent / Load.ki
+            Load.icurrent_peak = action()
 
     def calc_power_method(Load):
        print(f' ---Запуск процедуры вычилсений от мощности для {Load.name}---')
-       Load.type_pharser()
+       #Load.type_pharser()
        Load.calc_tgu()
        Load.calc_Pnominal()
        Load.calc_ki_x_Pnominal()
@@ -264,12 +272,13 @@ class Load:
        Load.calc_Qreactive()
        Load.calc_Sfull()
        Load.calc_I()
+       Load.calc_Ipeak()
        print(f"[ok]: расчет завершен----------------------------------")
 
     def calc_S_from_current(Load):
         print(f"вызов метода расчета S от тока")
         if Load.is_conv_from_icurrent == True:
-            print("[ok] параметр рпасчета от така получен")
+            print("[ok] параметр расчета от така получен")
             if Load.phase == 4:
                 action4 = lambda : (Load.voltage * 0.001) * math.sqrt(3)
                 temp4 = action4()
@@ -338,6 +347,7 @@ class Load:
 
 
     def sort_by_phase(Load):
+        print('Вызов сортировки потребителей и распределения по фазам')
 
         L1  = [loads for loads in Load.main_heap if Load.phase == 1]
 
@@ -347,7 +357,6 @@ class Load:
 
         L123 =  [loads for loads in Load.main_heap if Load.phase == 4]
 
-
         L1max_i = sum(Load.icurrent for Load in L1)
 
         L2max_i = sum(Load.icurrent for Load in L2)
@@ -356,34 +365,37 @@ class Load:
 
         L123max_i =  sum(Load.icurrent for Load in L123)
 
-
-        load_sorted = [L1,  L2, L3, L123]
+        load_sorted = [L1, L2, L3, L123]
 
         load_phase_max = [L1max_i, L2max_i, L3max_i, L123max_i]
 
+        group = load_sorted
+
         return load_sorted, load_phase_max
 
-def find_phase_peak (iter_obj):
+
+def find_peak_phase(iter_obj):
 
         temp = iter_obj [1]
         temp1 = [temp [0] , temp [1], temp [2]]
         maximum = max([val for val in temp1])
+
         minimum = min([val for val in temp1])
         diff = maximum - minimum
-        if diff == 0:
-            percent = 0
-        elif minimum  == 0:
+
+        if minimum  == 0:
             if       maximum == temp1 [0]:
                 percent = 'L1'
             elif    maximum == temp1 [1]:
                 percent = 'L2'
             elif    maximum == temp1[2]:
                 percent = 'L3'
+
         else:
             percent = (diff / minimum)* 100
 
         if maximum == 0:
-            return 0, percent
+            return 4, None
         elif maximum == temp1 [0]:
             return 1, percent
         elif maximum == temp1 [1]:
@@ -392,22 +404,84 @@ def find_phase_peak (iter_obj):
             return 3, percent
 
 
+def phase_accumulate(load_sorted, set):
+    if set == 1:
+       phase = load_sorted[0] [0]
+       phasemax =  load_sorted[1] [0]
+       name = 'L1'
+    elif set == 2:
+        phase =load_sorted[0] [1]
+        phasemax = load_sorted[1][1]
+        name = 'L2'
+    elif set == 3:
+        phase = load_sorted[0][2]
+        phasemax = load_sorted[1][2]
+        name = 'L3'
+    if phasemax ==0:
+        return None
+
+
+    accumulate_pnominal_phase =  sum(Load.pnominal for Load in phase)
+    accumulate_ki_x_pnominal_phase = sum(Load.ki_x_pnominal for Load in phase)
+    accumulate_ki_x_pnominal_tgu_phase = sum(Load.ki_x_pnominal_x_tgu for Load in phase)
+    accumulate_count_x_pnominal_by_one_pow_phase = accuracy(math.pow(accumulate_pnominal_phase, 2))
+    temp = accuracy(math.pow(accumulate_ki_x_pnominal_tgu_phase, 2) + math.pow(accumulate_ki_x_pnominal_phase, 2))
+    accumulate_S_full_phase = accuracy(math.sqrt(temp))
+
+    if accumulate_S_full_phase <= 0:
+        pass
+    else:
+        accumulate_cosu_phase = accuracy(accumulate_ki_x_pnominal_phase / accumulate_S_full_phase)
+
+    if accumulate_pnominal_phase == 0:
+        accumulate_ki_phase = 0
+    else:
+        accumulate_ki_phase = accuracy((accumulate_ki_x_pnominal_phase/ accumulate_pnominal_phase))
+
+    accumulate_tgu_phase  =accuracy (math.tan(math.acos(accumulate_cosu_phase)))
+
+    if phasemax <=0:
+        pass
+    else:
+        accumulate_voltage_phase = int(accuracy(accumulate_S_full_phase / phasemax) * 1000)
+
+    if accumulate_ki_phase <= 0:
+        pass
+    else:
+        accumulate_I_peak_phase = phasemax / accumulate_ki_phase
+
+    ph_par_set =\
+        {'name': name,
+        'is_conv_1ph': False,
+        'is_conv_linear_1ph': False,
+        'is_prior': False,
+        'phase':set,
+        'voltage':accumulate_voltage_phase,
+        'count': 1,
+        'pnominal_by_one': accumulate_pnominal_phase,
+        'pnominal': accumulate_pnominal_phase,
+        'cosu': accumulate_cosu_phase,
+        'tgu': accumulate_tgu_phase,
+        'ki': accumulate_ki_phase,
+        'ki_x_pnominal': accumulate_ki_x_pnominal_phase,
+        'ki_x_pnominal_x_tgu': accumulate_ki_x_pnominal_tgu_phase,
+        'count_x_pnominal_by_one_pow':accumulate_count_x_pnominal_by_one_pow_phase,
+        'pactive': accumulate_ki_x_pnominal_phase,
+        'qreacive': accumulate_ki_x_pnominal_tgu_phase,
+        'sfull':accumulate_S_full_phase,
+        'icurrent': phasemax,
+        'icurrent_peak':  accumulate_I_peak_phase, }
+
+    return ph_par_set
+
+def phaseobj_creator(ph_par_set):
+    ph_par_set ['name'] =\
+        Load ( ph_par_set ['name'],
+
+        )
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-            
 test = Load()
 test2 = Load()
 test.print_attr()
@@ -417,7 +491,10 @@ test.print_attr()
 test.calc_current_method()
 test.print_attr()
 sorted_heap = test.sort_by_phase()
-print(sorted_heap)
-phase_peak = find_phase_peak(sorted_heap)
-print(phase_peak)
+print(sorted_heap[0] [0])
+peak_phase = find_peak_phase(sorted_heap)
+print(peak_phase)
+phase_one =phase_accumulate(sorted_heap,2)
+print(phase_one)
+
 
